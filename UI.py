@@ -199,3 +199,6 @@ if uploaded_file is not None:
                     st.error("❌ Please enter a valid email address.")
     except Exception as e:
         st.error(f"⚠️ Error processing file: {e}")
+        # ---- FOOTER ----
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: gray;'>Made with 💙 by Ritvick</p>", unsafe_allow_html=True)
