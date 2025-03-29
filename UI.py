@@ -79,6 +79,16 @@ st.markdown("""
             from, to { border-color: transparent }
             50% { border-color: #00C6A2 }
         }
+
+        /* Mobile Optimization */
+        @media screen and (max-width: 768px) {
+            .typing-text {
+                font-size: 1.4em;
+                white-space: normal;
+                animation: none;
+                border: none;
+            }
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -266,10 +276,10 @@ if uploaded_file is not None:
                     st.error("❌ Please enter a valid email.")
     except Exception as e:
         st.error(f"⚠️ Error: {e}")
-        # ---- FOOTER ----
+
+# ---- FOOTER ----
 st.markdown("""
     <div style='text-align: center; padding: 20px; font-size: 16px; color: white;'>
         Made with ❤️ by Ritvick
     </div>
 """, unsafe_allow_html=True)
-
