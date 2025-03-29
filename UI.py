@@ -6,7 +6,7 @@ import json
 import http.client
 import re
 import smtplib
-import os  # ✅ Import for file cleanup
+import os
 from email.message import EmailMessage
 from urllib.parse import urlparse
 import concurrent.futures
@@ -20,17 +20,79 @@ def load_lottie(filepath: str):
 # ---- PAGE CONFIG ----
 st.set_page_config(page_title="Website Status Checker", layout="wide")
 
+# ---- CUSTOM STYLING ----
+st.markdown("""
+    <style>
+        .main {
+            background-color: #0f1117;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #00C6A2;
+        }
+        .stButton>button {
+            background: linear-gradient(135deg, #00C6A2, #0072ff);
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            border-radius: 12px;
+            padding: 0.7em 1.5em;
+            border: none;
+            transition: all 0.3s ease-in-out;
+        }
+        .stButton>button:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 15px rgba(0, 198, 162, 0.7);
+        }
+        .stDownloadButton>button {
+            background: linear-gradient(135deg, #1f77b4, #0055aa);
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            border-radius: 12px;
+            padding: 0.7em 1.5em;
+            transition: all 0.3s ease-in-out;
+        }
+        .stDownloadButton>button:hover {
+            transform: scale(1.08);
+            box-shadow: 0 0 15px rgba(31, 119, 180, 0.6);
+        }
+        .css-1v0mbdj p {
+            color: white;
+        }
+        /* Typing animation */
+        .typing-text {
+            overflow: hidden;
+            border-right: .15em solid #00C6A2;
+            white-space: nowrap;
+            animation: typing 3s steps(40, end), blink-caret .75s step-end infinite;
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #00C6A2;
+        }
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #00C6A2 }
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # ---- HEADER ----
 lottie_json = load_lottie("Animation - 1743016196710.json")
 with st.container():
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([1.2, 1])
     with col1:
-        st.title("⚡ Website Status Checker")
+        st.markdown("<div class='typing-text'>⚡ Website Status Checker</div>", unsafe_allow_html=True)
         st.markdown("""
-            <div style='font-size:18px; color:#CCCCCC;'>
+            <p style='font-size:18px; color:#999999; margin-top:20px;'>
             Upload a CSV file and this tool checks all website statuses.<br><br>
             Skips LinkedIn/WhatsApp/etc. Only real websites are checked 🧠
-            </div>
+            </p>
         """, unsafe_allow_html=True)
     with col2:
         st_lottie(lottie_json, height=300)
@@ -127,6 +189,10 @@ if uploaded_file is not None:
     try:
         df = pd.read_csv(uploaded_file)
 
+        # Preview uploaded file
+        with st.expander("🔍 Preview Uploaded CSV", expanded=True):
+            st.dataframe(df, use_container_width=True)
+
         # Identify website column
         possible_cols = [col for col in df.columns if any(keyword in col.lower() for keyword in valid_website_column_keywords)]
         actual_website_col = None
@@ -144,7 +210,7 @@ if uploaded_file is not None:
             start_time = time.time()
             st.info("🚀 Checking website statuses...")
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
                 status_list = list(executor.map(check_website_status_fast, urls))
 
             # Progress bar
@@ -172,6 +238,7 @@ if uploaded_file is not None:
             end_time = time.time()
             total_time = round(end_time - start_time, 2)
 
+            st.markdown("## ✅ Final Results")
             st.dataframe(df, use_container_width=True)
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Updated CSV", data=csv, file_name="updated_status.csv", mime="text/csv")
@@ -193,12 +260,16 @@ if uploaded_file is not None:
             if st.button("✉️ Send Email"):
                 if is_valid_email(email):
                     send_email_with_csv(email, saved_path)
-                    os.remove(saved_path)  # ✅ Delete temp file after sending
-                    st.success("📤 Email sent successfully, Please check Spam folder!")
+                    os.remove(saved_path)
+                    st.success("📤 Email sent successfully!")
                 else:
-                    st.error("❌ Please enter a valid email address.")
+                    st.error("❌ Please enter a valid email.")
     except Exception as e:
-        st.error(f"⚠️ Error processing file: {e}")
+        st.error(f"⚠️ Error: {e}")
         # ---- FOOTER ----
-st.markdown("---")
-st.markdown("<p style='text-align: center; color: gray;'>Made with 💙 by Ritvick</p>", unsafe_allow_html=True)
+st.markdown("""
+    <div style='text-align: center; padding: 20px; font-size: 16px; color: white;'>
+        Made with ❤️ by Ritvick
+    </div>
+""", unsafe_allow_html=True)
+
