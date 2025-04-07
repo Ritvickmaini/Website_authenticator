@@ -12,6 +12,12 @@ from urllib.parse import urlparse
 import concurrent.futures
 from streamlit_lottie import st_lottie
 
+# ---- PING HANDLER FOR UPTIMEROBOT ----
+params = st.experimental_get_query_params()
+if "ping" in params:
+    st.write("✅ App is alive!")
+    st.stop()
+
 # ---- LOAD LOTTIE ----
 def load_lottie(filepath: str):
     with open(filepath, "r") as f:
@@ -61,7 +67,6 @@ st.markdown("""
         .css-1v0mbdj p {
             color: white;
         }
-        /* Typing animation */
         .typing-text {
             overflow: hidden;
             border-right: .15em solid #00C6A2;
@@ -79,8 +84,6 @@ st.markdown("""
             from, to { border-color: transparent }
             50% { border-color: #00C6A2 }
         }
-
-        /* Mobile Optimization */
         @media screen and (max-width: 768px) {
             .typing-text {
                 font-size: 1.4em;
@@ -283,3 +286,4 @@ st.markdown("""
         Made with ❤️ by Ritvick
     </div>
 """, unsafe_allow_html=True)
+
