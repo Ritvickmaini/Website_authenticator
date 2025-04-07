@@ -1,4 +1,15 @@
 import streamlit as st
+
+# ---- PAGE CONFIG (must be first Streamlit command) ----
+st.set_page_config(page_title="Website Status Checker", layout="wide")
+
+# ---- HANDLE QUERY PARAMS ----
+params = st.query_params
+if "ping" in params:
+    st.write("✅ App is alive!")
+    st.stop()
+
+# ---- IMPORTS ----
 import pandas as pd
 import socket
 import time
@@ -12,19 +23,10 @@ from urllib.parse import urlparse
 import concurrent.futures
 from streamlit_lottie import st_lottie
 
-# ---- PING HANDLER FOR UPTIMEROBOT ----
-params = st.experimental_get_query_params()
-if "ping" in params:
-    st.write("✅ App is alive!")
-    st.stop()
-
 # ---- LOAD LOTTIE ----
 def load_lottie(filepath: str):
     with open(filepath, "r") as f:
         return json.load(f)
-
-# ---- PAGE CONFIG ----
-st.set_page_config(page_title="Website Status Checker", layout="wide")
 
 # ---- CUSTOM STYLING ----
 st.markdown("""
@@ -165,13 +167,13 @@ def is_valid_email(email):
 
 def send_email_with_csv(receiver_email, file_path):
     sender_email = "b2bgrowthexpo@gmail.com"
-    sender_password = "esoalaeiitmdpntw"  # App Password
+    sender_password = "esoalaeiitmdpntw"
 
     msg = EmailMessage()
     msg['Subject'] = '✅ Your Website Status CSV is Ready'
     msg['From'] = sender_email
     msg['To'] = receiver_email
-    msg.set_content(f"""
+    msg.set_content("""
 Hi there 👋,
 
 Thanks for using the Website Status Checker tool!
@@ -182,8 +184,6 @@ Your processed CSV file is attached to this email. It contains:
 - ⚪ Skipped (Social or Empty URLs)
 
 We hope this helps you streamline your data.
-
-Feel free to revisit the tool whenever you need to check website status in bulk.
 
 Best regards,  
 Website Status Checker 🔎  
@@ -202,11 +202,9 @@ if uploaded_file is not None:
     try:
         df = pd.read_csv(uploaded_file)
 
-        # Preview uploaded file
         with st.expander("🔍 Preview Uploaded CSV", expanded=True):
             st.dataframe(df, use_container_width=True)
 
-        # Identify website column
         possible_cols = [col for col in df.columns if any(keyword in col.lower() for keyword in valid_website_column_keywords)]
         actual_website_col = None
         for col in possible_cols:
@@ -226,13 +224,11 @@ if uploaded_file is not None:
             with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
                 status_list = list(executor.map(check_website_status_fast, urls))
 
-            # Progress bar
             progress_bar = st.progress(0)
             for i in range(len(status_list)):
                 time.sleep(0.001)
                 progress_bar.progress((i + 1) / len(status_list))
 
-            # Recheck Inactive
             st.info("🔄 Re-checking inactive sites...")
             updated_status = status_list.copy()
             inactive_indices = [i for i, status in enumerate(status_list) if status == "🔴 Inactive"]
@@ -244,7 +240,6 @@ if uploaded_file is not None:
             for idx, new_status in zip(inactive_indices, rechecked):
                 updated_status[idx] = new_status
 
-            # Insert results
             insert_at = df.columns.get_loc(actual_website_col) + 1
             df.insert(insert_at, "Website Status", updated_status)
 
@@ -256,7 +251,6 @@ if uploaded_file is not None:
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("⬇️ Download Updated CSV", data=csv, file_name="updated_status.csv", mime="text/csv")
 
-            # Save CSV for email
             saved_path = "updated_status.csv"
             df.to_csv(saved_path, index=False)
 
@@ -267,7 +261,6 @@ if uploaded_file is not None:
             st.info(f"⏱️ Time taken: **{total_time} seconds**")
             st.success(f"✅ Active: {active_count} | 🔴 Inactive: {inactive_count} | ⚪ Skipped: {skipped_count}")
 
-            # ---- EMAIL SECTION ----
             email = st.text_input("📧 Enter your email to receive the updated CSV")
 
             if st.button("✉️ Send Email"):
@@ -286,4 +279,5 @@ st.markdown("""
         Made with ❤️ by Ritvick
     </div>
 """, unsafe_allow_html=True)
+
 
